@@ -1,10 +1,10 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Project } from './types';
 import ProjectCard from './components/ProjectCard';
 import ProjectDetail from './components/ProjectDetail';
 import CustomCursor from './components/CustomCursor';
-import { Mail, Phone, MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
+import Magnetic from './components/Magnetic';
 
 const PROJECTS: Project[] = [
   {
@@ -177,25 +177,6 @@ const SKILLS = [
 const App: React.FC = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [activeDropdown, setActiveDropdown] = useState<'email' | 'contact' | null>(null);
-  const [copied, setCopied] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
@@ -216,40 +197,54 @@ const App: React.FC = () => {
       <CustomCursor />
       
       {/* Home Content Always Visible */}
-      <div className={`max-w-[1400px] mx-auto px-6 py-10 transition-all duration-700 ${selectedProject ? 'blur-sm scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
+      <div className={`transition-all duration-700 ${selectedProject ? 'blur-sm scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
         
-        {/* Header */}
-        <header className="flex justify-between items-center border-b border-border pb-8 mb-16">
-          <div className="text-2xl font-extrabold uppercase tracking-tighter">
-            OMKAR<span className="text-acid">PORTFOLIO</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-10 font-mono text-[10px] tracking-widest text-text-sec uppercase">
-            <a href="#work" className="hover:text-acid transition-colors">[WORK]</a>
-            <a href="#contact" className="hover:text-acid transition-colors">[CONTACT]</a>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-acid rounded-full animate-blink"></div>
-              <span>Open for Commissions</span>
+        <div className="max-w-[1400px] mx-auto px-6 py-10">
+          {/* Header */}
+          <header className="flex justify-between items-center border-b border-border pb-8 mb-16">
+            <div className="text-2xl font-extrabold uppercase tracking-tighter">
+              OMKAR<span className="text-acid">PORTFOLIO</span>
             </div>
-            <div className="border-l border-border pl-8">UTC {time}</div>
-          </nav>
-        </header>
+            <nav className="hidden md:flex items-center gap-10 font-mono text-[10px] tracking-widest text-text-sec uppercase">
+              <Magnetic>
+                <a href="#work" className="hover:text-acid transition-colors">[WORK]</a>
+              </Magnetic>
+              <Magnetic>
+                <a href="#contact" className="hover:text-acid transition-colors">[CONTACT]</a>
+              </Magnetic>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-acid rounded-full animate-blink"></div>
+                <span>Open for Commissions</span>
+              </div>
+              <div className="border-l border-border pl-8">UTC {time}</div>
+            </nav>
+          </header>
 
-        {/* Hero Section */}
-        <section className="mb-24">
-          <h1 className="text-6xl md:text-[140px] font-extrabold uppercase leading-[0.85] tracking-tighter mb-10">
-            Shaping <br />
-            <span className="text-acid">Visual</span> <br />
-            Stories.
-          </h1>
-          <div className="max-w-xl border-l-2 border-acid pl-8 py-2">
-            <p className="font-mono text-lg text-text-sec leading-relaxed">
-              I’m a Visual Communication student, curious about how design and storytelling shape digital experiences, and always looking to learn something new.
-            </p>
+          {/* Hero Section */}
+          <section className="mb-24">
+            <h1 className="text-6xl md:text-[140px] font-extrabold uppercase leading-[0.85] tracking-tighter mb-10">
+              Shaping <br />
+              <span className="text-acid">Visual</span> <br />
+              Stories.
+            </h1>
+            <div className="max-w-xl border-l-2 border-acid pl-8 py-2">
+              <p className="font-mono text-lg text-text-sec leading-relaxed">
+                I’m a Visual Communication student, curious about how design and storytelling shape digital experiences, and always looking to learn something new.
+              </p>
+            </div>
+          </section>
+        </div>
+
+        {/* Marquee */}
+        <div className="bg-acid text-bg py-5 overflow-hidden whitespace-nowrap marquee-tilted border-y-2 border-white mb-32">
+          <div className="inline-block animate-scroll font-mono font-bold text-xl uppercase">
+            /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY
           </div>
-        </section>
+        </div>
 
-        {/* Bio & Skills Section */}
-        <section className="mb-32 grid grid-cols-1 lg:grid-cols-12 gap-12 border-t border-border pt-20">
+        <div className="max-w-[1400px] mx-auto px-6">
+          {/* Bio & Skills Section */}
+          <section className="mb-32 grid grid-cols-1 lg:grid-cols-12 gap-12 border-t border-border pt-20">
           <div className="lg:col-span-7">
             <h2 className="text-4xl font-extrabold uppercase mb-8 tracking-tighter">
               Design <span className="text-acid underline decoration-2 underline-offset-8">Strategy</span>
@@ -301,111 +296,22 @@ const App: React.FC = () => {
           <h2 className="text-4xl md:text-6xl font-extrabold uppercase mb-12 text-center tracking-tighter">
             Let's create the <br /> <span className="text-acid">Future of Visuals.</span>
           </h2>
-          <div className="flex flex-wrap justify-center gap-6 relative" ref={dropdownRef}>
-            {/* Email Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setActiveDropdown(activeDropdown === 'email' ? null : 'email')}
-                className={`px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${activeDropdown === 'email' ? 'bg-acid text-bg border-acid' : 'hover:bg-acid hover:text-bg hover:border-acid'}`}
-              >
-                <Mail size={16} />
-                Email
-              </button>
-              
-              {activeDropdown === 'email' && (
-                <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-72 bg-surface border border-border p-4 shadow-2xl z-50 transform transition-all duration-200 origin-bottom">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between border-b border-border pb-2">
-                      <span className="font-mono text-[10px] text-text-sec uppercase tracking-widest">Email Address</span>
-                      <button 
-                        onClick={() => copyToClipboard('omkarbodas28@gmail.com')}
-                        className="text-acid hover:scale-110 transition-transform"
-                        title="Copy to clipboard"
-                      >
-                        {copied ? <Check size={14} /> : <Copy size={14} />}
-                      </button>
-                    </div>
-                    <div className="font-mono text-sm break-all">
-                      omkarbodas28@gmail.com
-                    </div>
-                    <a 
-                      href="mailto:omkarbodas28@gmail.com"
-                      className="flex items-center justify-center gap-2 bg-acid text-bg py-2 font-mono text-xs uppercase font-bold hover:opacity-90 transition-opacity"
-                    >
-                      <ExternalLink size={14} />
-                      Open Mail
-                    </a>
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-surface border-r border-b border-border rotate-45"></div>
-                </div>
-              )}
-            </div>
-
-            {/* Contact Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setActiveDropdown(activeDropdown === 'contact' ? null : 'contact')}
-                className={`px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${activeDropdown === 'contact' ? 'bg-acid text-bg border-acid' : 'hover:bg-acid hover:text-bg hover:border-acid'}`}
-              >
-                <Phone size={16} />
-                Contact
-              </button>
-
-              {activeDropdown === 'contact' && (
-                <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-72 bg-surface border border-border p-4 shadow-2xl z-50 transform transition-all duration-200 origin-bottom">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between border-b border-border pb-2 mb-1">
-                      <span className="font-mono text-[10px] text-text-sec uppercase tracking-widest">Contact Options</span>
-                      <span className="font-mono text-[10px] text-acid font-bold">8999091716</span>
-                    </div>
-                    
-                    <a 
-                      href="tel:8999091716"
-                      className="flex items-center gap-3 p-3 border border-border hover:bg-acid/10 hover:border-acid transition-all group"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center bg-acid/20 text-acid group-hover:bg-acid group-hover:text-bg transition-colors">
-                        <Phone size={16} />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-mono text-xs font-bold uppercase">Call Me</span>
-                        <span className="font-mono text-[10px] text-text-sec">Direct voice call</span>
-                      </div>
-                    </a>
-
-                    <a 
-                      href="sms:8999091716"
-                      className="flex items-center gap-3 p-3 border border-border hover:bg-acid/10 hover:border-acid transition-all group"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center bg-acid/20 text-acid group-hover:bg-acid group-hover:text-bg transition-colors">
-                        <MessageSquare size={16} />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-mono text-xs font-bold uppercase">Message Me</span>
-                        <span className="font-mono text-[10px] text-text-sec">Send a text message</span>
-                      </div>
-                    </a>
-
-                    <a 
-                      href="https://wa.me/918999091716"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 border border-border hover:bg-acid/10 hover:border-acid transition-all group"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center bg-[#25D366]/20 text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-colors">
-                        <MessageSquare size={16} />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-mono text-xs font-bold uppercase">WhatsApp</span>
-                        <span className="font-mono text-[10px] text-text-sec">Chat on WhatsApp</span>
-                      </div>
-                    </a>
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-surface border-r border-b border-border rotate-45"></div>
-                </div>
-              )}
-            </div>
+          <div className="flex flex-wrap justify-center gap-6">
+            <a 
+              href="mailto:omkarbodas28@gmail.com" 
+              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-acid hover:text-bg hover:border-acid transition-all duration-300"
+            >
+              Email
+            </a>
+            <a 
+              href="tel:8999091716" 
+              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-acid hover:text-bg hover:border-acid transition-all duration-300"
+            >
+              Contact
+            </a>
           </div>
         </footer>
+      </div>
       </div>
 
       {/* Project Detail Modal Overlay */}

@@ -34,10 +34,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
   return (
     <div 
       onClick={() => onClick(project)}
-      className="group block bg-surface border border-border overflow-hidden transition-all duration-700 hover:border-acid/50 hover:scale-[1.01] hover:shadow-[0_20px_40px_-15px_rgba(204,255,0,0.15)] h-[520px] flex flex-col active:scale-[0.99]"
+      className="group block bg-surface border border-border overflow-hidden transition-all duration-500 ease-out hover:border-acid/60 hover:scale-[1.03] hover:shadow-[0_25px_50px_-20px_rgba(204,255,0,0.25)] h-[520px] flex flex-col active:scale-[0.98] cursor-pointer"
     >
       {/* High-fidelity Media Container */}
       <div className="card-img h-[72%] overflow-hidden border-b border-border relative bg-[#080808] flex items-center justify-center">
+        {/* Dynamic Year Pill Badge */}
+        <div className="absolute top-4 right-4 z-30 bg-[#080808]/85 border border-border/40 group-hover:border-acid/50 px-3 py-1 rounded-full backdrop-blur-md transition-all duration-500 shadow-lg">
+          <span className="font-mono text-[9px] font-extrabold text-acid tracking-[0.15em]">
+            {project.year}
+          </span>
+        </div>
+
         {hasSlideshow ? (
           slideshowMedia.map((url, idx) => {
             const active = idx === currentIdx;
@@ -54,7 +61,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
                     loop 
                     playsInline
                     onLoadedData={() => handleMediaLoad(idx)}
-                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out will-change-transform ${
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out will-change-transform grayscale group-hover:grayscale-0 ${
                       active && loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
                     }`}
                   />
@@ -66,7 +73,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
                     decoding="async"
                     fetchPriority={idx === 0 ? "high" : "low"}
                     onLoad={() => handleMediaLoad(idx)}
-                    className={`absolute inset-0 w-full h-full object-contain transition-all duration-1000 ease-in-out will-change-transform ${
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out will-change-transform grayscale group-hover:grayscale-0 ${
                       active && loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                     }`}
                     style={{ 
@@ -84,7 +91,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
             alt={project.title} 
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 grayscale group-hover:grayscale-0"
             style={{ 
               imageRendering: 'auto',
               WebkitBackfaceVisibility: 'hidden',
