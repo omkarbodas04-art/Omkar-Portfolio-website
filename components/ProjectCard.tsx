@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Project } from '../types';
+import { audioService } from '../services/audioService';
 
 interface ProjectCardProps {
   project: Project;
@@ -31,18 +32,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
     setLoadedMedia(prev => new Set(prev).add(idx));
   };
 
+  const handleCustomClick = () => {
+    audioService.playSecondary();
+    onClick(project);
+  };
+
   return (
     <div 
-      onClick={() => onClick(project)}
+      onClick={handleCustomClick}
+      onMouseEnter={() => audioService.playClick()}
       className="group block bg-surface border border-border overflow-hidden transition-all duration-500 ease-out hover:border-acid/60 hover:scale-[1.03] hover:shadow-[0_25px_50px_-20px_rgba(204,255,0,0.25)] h-[520px] flex flex-col active:scale-[0.98] cursor-pointer"
     >
       {/* High-fidelity Media Container */}
       <div className="card-img h-[72%] overflow-hidden border-b border-border relative bg-[#080808] flex items-center justify-center">
-        {/* Dynamic Year Pill Badge */}
-        <div className="absolute top-4 right-4 z-30 bg-[#080808]/85 border border-border/40 group-hover:border-acid/50 px-3 py-1 rounded-full backdrop-blur-md transition-all duration-500 shadow-lg">
-          <span className="font-mono text-[9px] font-extrabold text-acid tracking-[0.15em]">
-            {project.year}
-          </span>
+        {/* Subtle Brutalist Year Corner Timestamp */}
+        <div className="absolute top-0 right-0 z-30 bg-bg border-l border-b border-border text-text-sec px-3 py-1.5 font-mono text-[10px] font-bold tracking-[0.15em] transition-all duration-500 group-hover:bg-acid group-hover:text-bg group-hover:border-acid">
+          {project.year}
         </div>
 
         {hasSlideshow ? (
@@ -73,12 +78,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
                     decoding="async"
                     fetchPriority={idx === 0 ? "high" : "low"}
                     onLoad={() => handleMediaLoad(idx)}
+                    draggable={false}
                     className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out will-change-transform grayscale group-hover:grayscale-0 ${
                       active && loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                     }`}
                     style={{ 
                       imageRendering: 'auto',
                       WebkitBackfaceVisibility: 'hidden',
+                      userSelect: 'none',
                     }}
                   />
                 )}
@@ -91,10 +98,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
             alt={project.title} 
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 grayscale group-hover:grayscale-0"
+            draggable={false}
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 grayscale group-hover:grayscale-0 select-none"
             style={{ 
               imageRendering: 'auto',
               WebkitBackfaceVisibility: 'hidden',
+              userSelect: 'none',
             }}
           />
         )}

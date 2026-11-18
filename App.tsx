@@ -1,10 +1,61 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Project } from './types';
 import ProjectCard from './components/ProjectCard';
 import ProjectDetail from './components/ProjectDetail';
 import CustomCursor from './components/CustomCursor';
 import Magnetic from './components/Magnetic';
+import ScrollProgress from './components/ScrollProgress';
+import SkillPill from './components/SkillPill';
+import { audioService } from './services/audioService';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 40, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      damping: 20,
+      stiffness: 90
+    }
+  }
+};
+
+const gridVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { y: 30, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      damping: 25,
+      stiffness: 90
+    }
+  }
+};
 
 const PROJECTS: Project[] = [
   {
@@ -23,6 +74,7 @@ const PROJECTS: Project[] = [
       'https://image2url.com/r2/default/images/1770454045924-1a9623cf-46f4-4498-b5b7-947496292c4d.jpg'
     ],
     year: '2025',
+    tags: ['Typography', 'Editorial'],
     brief: [
       "This project focused on researching the work and design philosophy of Paula Scher, a designer known for her bold, expressive, and typographic approach. The aim was not only to understand her contributions to graphic design, but also to explore how typography can function as a primary visual element rather than just a medium for text.",
       "As a response to this research, I designed a book that became an exploration of typography in its most expressive form. The process involved studying Scher’s use of scale, hierarchy, density, and composition, and translating those principles into my own visual language. I experimented with large, dominant type, layered compositions, and dynamic layouts to see how typography could create rhythm, movement, and emotion across pages.",
@@ -44,6 +96,7 @@ const PROJECTS: Project[] = [
       'https://image2url.com/r2/default/images/1770268950236-2c113360-21f0-47fe-bb16-c5b0a2609a1a.jpg'
     ],
     year: '2025',
+    tags: ['Illustration'],
     brief: [
       "This project focused on exploring character design by combining human features with those of a lion. The aim was to understand how different visual elements can merge to create a cohesive and expressive hybrid character.",
       "The process involved studying both human anatomy and lion characteristics, including facial structure, proportions, and expressions. Through multiple sketches and iterations, I experimented with integrating features like the mane, eyes, and bone structure while maintaining balance and clarity in the design.",
@@ -68,6 +121,7 @@ const PROJECTS: Project[] = [
       'https://image2url.com/r2/default/images/1770280652860-c118a935-7d6c-4ec9-9c01-54897d895b10.blob'
     ],
     year: '2023',
+    tags: ['Branding'],
     brief: [
       "This project focused on creating a hypothetical brand centered around handheld gaming consoles. The aim was to explore how a brand can be built from scratch, including its visual identity, tone, and overall design language.",
       "I began by researching the world of handheld consoles, looking at their evolution, user base, and visual styles. Based on this, I developed a brand concept that reflects portability, playfulness, and a strong digital culture. From there, I designed key brand elements such as the logo, color palette, and typography.",
@@ -95,9 +149,10 @@ const PROJECTS: Project[] = [
       'https://image2url.com/r2/default/videos/1770270398183-93056a55-0524-469c-964a-eee00a772d06.mp4'
     ],
     year: '2026',
+    tags: ['Branding', 'AI Design'],
     brief: [
       "This project was a group initiative where we developed a campaign concept for the brand Dankies, centered around a camping theme. The aim was to explore how AI tools can be used as a primary medium for creating visual and digital content.",
-      "As a team, we worked on building a cohesive campaign that included videos and posters, ensuring that all outputs aligned with the core idea and visual direction. What made this project unique was that every element was created entirely using AI tools, without traditional design methods.",
+      "As a team, we worked on building a campaign that included videos and posters, ensuring that all outputs aligned with the core idea and visual direction. What made this project unique was that every element was created entirely using AI tools, without traditional design methods.",
       "We used platforms such as Wisk, Flow, and Claude to generate visuals, assist with ideation, and refine the overall concept. This required a strong focus on prompt-building, experimentation, and iteration to achieve the desired results.",
       "The project helped me understand the creative potential of AI in design, as well as the importance of direction and decision-making when working with generative tools."
     ]
@@ -138,6 +193,7 @@ const PROJECTS: Project[] = [
       'https://image2url.com/r2/default/images/1774096380197-bb961cd8-3b3e-4115-806a-0060a55e461e.jpg'
     ],
     year: '2026',
+    tags: ['Editorial', 'Branding'],
     brief: [
       "This project focused on designing a product catalog for Capcom, featuring DVD collections of game series such as Resident Evil, Devil May Cry, and Monster Hunter. The aim was to explore how visual design can organize and present a large range of products in a clear, engaging, and structured format.",
       "I began by researching Capcom’s existing visual language, along with the identity of each game franchise, to ensure the catalog felt cohesive while still respecting the uniqueness of each series. The design process involved working with layout systems, typography, and image placement to create a balanced and easy-to-navigate catalog.",
@@ -156,6 +212,7 @@ const PROJECTS: Project[] = [
       'https://go.screenpal.com/watch/cOerlmnTh0D'
     ],
     year: '2026',
+    tags: ['Motion'],
     brief: [
       "This project focused on learning and exploring Adobe After Effects as a tool for motion design. The aim was to understand the basics of animation, timing, and how motion can enhance visual communication.",
       "I began by experimenting with simple animations such as text movement, transitions, and basic effects. As I progressed, I explored keyframes, easing, and layering to create smoother and more dynamic visuals. This helped me understand how small changes in timing and motion can significantly impact the overall feel of a design.",
@@ -177,11 +234,164 @@ const SKILLS = [
 const App: React.FC = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [theme, setTheme] = useState<'dark' | 'inverted'>(() => {
+    return (localStorage.getItem('portfolio-theme') as 'dark' | 'inverted') || 'dark';
+  });
+  const [isMuted, setIsMuted] = useState(audioService.isMuted());
+  const [selectedTag, setSelectedTag] = useState<string>('All');
+
+  // Filter projects dynamically based on selected tag
+  const filteredProjects = selectedTag === 'All'
+    ? PROJECTS
+    : PROJECTS.filter(project => project.tags?.includes(selectedTag));
+
+  // Reset horizontal slider scroll progress & scrollLeft on tag change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = 0;
+      setScrollProgress(0);
+    }
+  }, [selectedTag]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('portfolio-theme', theme);
+    if (theme === 'inverted') {
+      document.documentElement.classList.add('theme-inverted');
+    } else {
+      document.documentElement.classList.remove('theme-inverted');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'inverted' : 'dark');
+    audioService.playThemeTransition();
+  };
+
+  const toggleMute = () => {
+    const nextMute = !isMuted;
+    setIsMuted(nextMute);
+    audioService.setMuted(nextMute);
+  };
+
+  // Drag-to-scroll logic for Work panel using a robust useRef config to prevent stuttery re-renders on mousemove
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({
+    isDragging: false,
+    dragged: false,
+    startX: 0,
+    scrollLeft: 0,
+  });
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [secretClicks, setSecretClicks] = useState(0);
+
+  const handleSecretClick = () => {
+    const next = secretClicks + 1;
+    setSecretClicks(next);
+    
+    if (next >= 30) {
+      setSecretClicks(0);
+      audioService.playChime();
+      setTimeout(() => {
+        window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+      }, 300);
+    } else {
+      audioService.playClick();
+      if (next % 5 === 0) {
+        audioService.playSecondary();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      // Show button when scrolled past the hero section (e.g. 450px)
+      if (window.scrollY > 450) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleWindowScroll);
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+    audioService.playClick();
+  };
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    const totalScroll = scrollWidth - clientWidth;
+    if (totalScroll <= 0) {
+      setScrollProgress(0);
+    } else {
+      setScrollProgress((scrollLeft / totalScroll) * 100);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    dragRef.current.isDragging = true;
+    dragRef.current.dragged = false;
+    dragRef.current.startX = e.clientX;
+    dragRef.current.scrollLeft = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current.isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.clientX;
+    const walk = (x - dragRef.current.startX) * 1.8; // speed multiplier
+    if (Math.abs(walk) > 4) {
+      dragRef.current.dragged = true;
+    }
+    scrollRef.current.scrollLeft = dragRef.current.scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    dragRef.current.isDragging = false;
+  };
+
+  const handleMouseLeave = () => {
+    dragRef.current.isDragging = false;
+  };
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (dragRef.current.dragged) {
+      e.stopPropagation();
+      e.preventDefault();
+      dragRef.current.dragged = false;
+    }
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0) return;
+      const canScrollLeft = el.scrollLeft > 0;
+      const canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth;
+      if ((e.deltaY < 0 && canScrollLeft) || (e.deltaY > 0 && canScrollRight)) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY * 1.5; // multiplier for a fluid scroll speed
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, [filteredProjects]);
 
   useEffect(() => {
     // Prevent body scroll when project is open
@@ -195,6 +405,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-bg text-white selection:bg-acid selection:text-bg animate-in fade-in duration-500">
       <CustomCursor />
+      <ScrollProgress />
       
       {/* Home Content Always Visible */}
       <div className={`transition-all duration-700 ${selectedProject ? 'blur-sm scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
@@ -205,40 +416,86 @@ const App: React.FC = () => {
             <div className="text-2xl font-extrabold uppercase tracking-tighter">
               OMKAR<span className="text-acid">PORTFOLIO</span>
             </div>
-            <nav className="hidden md:flex items-center gap-10 font-mono text-[10px] tracking-widest text-text-sec uppercase">
-              <Magnetic>
-                <a href="#work" className="hover:text-acid transition-colors">[WORK]</a>
-              </Magnetic>
-              <Magnetic>
-                <a href="#contact" className="hover:text-acid transition-colors">[CONTACT]</a>
-              </Magnetic>
+            
+            <div className="flex items-center gap-4 md:gap-6">
+              <nav className="hidden md:flex items-center gap-10 font-mono text-[10px] tracking-widest text-text-sec uppercase">
+                <Magnetic>
+                  <a 
+                    href="#work" 
+                    onMouseEnter={() => audioService.playClick()} 
+                    className="hover:text-acid transition-colors"
+                  >
+                    [WORK]
+                  </a>
+                </Magnetic>
+                <Magnetic>
+                  <a 
+                    href="#contact" 
+                    onMouseEnter={() => audioService.playClick()} 
+                    className="hover:text-acid transition-colors"
+                  >
+                    [CONTACT]
+                  </a>
+                </Magnetic>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-acid rounded-full animate-blink"></div>
+                  <span>Open for Commissions</span>
+                </div>
+                <div className="border-l border-border pl-8">UTC {time}</div>
+              </nav>
+
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-acid rounded-full animate-blink"></div>
-                <span>Open for Commissions</span>
+                <Magnetic>
+                  <button 
+                    onClick={toggleMute}
+                    onMouseEnter={() => audioService.playClick()}
+                    id="sound-toggle-btn"
+                    className="font-mono text-[9px] font-bold tracking-[0.15em] border border-border px-3.5 py-1.5 bg-surface hover:bg-acid hover:text-bg hover:border-acid active:scale-95 transition-all uppercase"
+                  >
+                    [{isMuted ? 'SOUND_MUTED' : 'SOUND_ON'}]
+                  </button>
+                </Magnetic>
+
+                <Magnetic>
+                  <button 
+                    onClick={toggleTheme}
+                    onMouseEnter={() => audioService.playClick()}
+                    id="theme-toggle-btn"
+                    className="font-mono text-[9px] font-bold tracking-[0.15em] border border-border px-3.5 py-1.5 bg-surface hover:bg-acid hover:text-bg hover:border-acid active:scale-95 transition-all uppercase"
+                  >
+                    [{theme === 'dark' ? 'INVERT_THEME' : 'DARK_THEME'}]
+                  </button>
+                </Magnetic>
               </div>
-              <div className="border-l border-border pl-8">UTC {time}</div>
-            </nav>
+            </div>
           </header>
 
           {/* Hero Section */}
-          <section className="mb-24">
-            <h1 className="text-6xl md:text-[140px] font-extrabold uppercase leading-[0.85] tracking-tighter mb-10">
-              Shaping <br />
-              <span className="text-acid">Visual</span> <br />
-              Stories.
+          <motion.section 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-24"
+          >
+            <h1 className="text-6xl md:text-[140px] font-extrabold uppercase leading-[0.85] tracking-tighter mb-10 select-none">
+              <span className="overflow-hidden block"><motion.span variants={itemVariants} className="block">Shaping</motion.span></span>
+              <span className="overflow-hidden block text-acid"><motion.span variants={itemVariants} className="block">Visual</motion.span></span>
+              <span className="overflow-hidden block"><motion.span variants={itemVariants} className="block">Stories.</motion.span></span>
             </h1>
-            <div className="max-w-xl border-l-2 border-acid pl-8 py-2">
+            <motion.div variants={itemVariants} className="max-w-xl border-l-2 border-acid pl-8 py-2">
               <p className="font-mono text-lg text-text-sec leading-relaxed">
                 I’m a Visual Communication student, curious about how design and storytelling shape digital experiences, and always looking to learn something new.
               </p>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
         </div>
 
         {/* Marquee */}
         <div className="bg-acid text-bg py-5 overflow-hidden whitespace-nowrap marquee-tilted border-y-2 border-white mb-32">
           <div className="inline-block animate-scroll font-mono font-bold text-xl uppercase">
-            /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY
+            <span className="moving-kinetic-text">
+              /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY
+            </span>
           </div>
         </div>
 
@@ -266,35 +523,122 @@ const App: React.FC = () => {
             <h3 className="font-mono text-xs uppercase text-acid mb-6 tracking-[0.3em]">/// DESIGN_CORE.PKG</h3>
             <div className="flex flex-wrap gap-3">
               {SKILLS.map((skill) => (
-                <div 
-                  key={skill} 
-                  className="border border-border px-4 py-2 font-mono text-sm uppercase tracking-tighter hover:bg-acid hover:text-bg hover:border-acid transition-all cursor-crosshair"
-                >
-                  {skill}
-                </div>
+                <SkillPill key={skill} skill={skill} />
               ))}
             </div>
           </div>
         </section>
 
         {/* Work Section */}
-        <section id="work" className="mb-32">
-          <div className="flex justify-between items-end border-b border-border pb-6 mb-12">
-            <h2 className="text-5xl font-extrabold uppercase tracking-tighter">MY work</h2>
-            <span className="font-mono text-text-sec text-xs">(2023 - 2024)</span>
+        <section id="work" className="mb-32 overflow-hidden">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-border pb-6 mb-8 gap-4">
+            <div>
+              <h2 className="text-5xl font-extrabold uppercase tracking-tighter">MY work</h2>
+              <p className="font-mono text-[9px] text-acid uppercase tracking-[0.2em] mt-1 select-none">
+                [ DRAG OR SCROLL HORIZONTALLY TO EXPLORE ]
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-text-sec text-xs uppercase">[DRAGGABLE LIST]</span>
+              <span className="font-mono text-text-sec text-xs">(2023 - 2024)</span>
+            </div>
+          </div>
+
+          {/* Brutalist Tag Filter Bar */}
+          <div className="flex flex-wrap gap-2.5 md:gap-4 mb-10 pb-2 overflow-x-auto no-scrollbar select-none">
+            {['All', 'Branding', 'Motion', 'Editorial', 'Typography', 'Illustration'].map((tag) => {
+              const isActive = selectedTag === tag;
+              return (
+                <Magnetic key={tag}>
+                  <motion.button
+                    onClick={() => {
+                      setSelectedTag(tag);
+                      audioService.playClick();
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={isActive ? { scale: 1.03 } : { scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                    className={`relative overflow-hidden font-mono text-[11px] md:text-xs font-bold uppercase tracking-widest border-2 px-5 py-2.5 bg-surface select-none cursor-pointer transition-all duration-150 ${
+                      isActive 
+                        ? 'border-acid text-black font-black shadow-[4px_4px_0px_rgba(255,255,255,0.15)]' 
+                        : 'border-border text-white/60 hover:text-white hover:border-acid hover:shadow-[4px_4px_0px_var(--acid-color)] hover:-translate-x-[2px] hover:-translate-y-[2px] shadow-[3px_3px_0px_rgba(255,255,255,0.06)]'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="activeTagIndicator"
+                        className="absolute inset-0 bg-acid"
+                        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                        style={{ zIndex: 0 }}
+                      />
+                    )}
+                    <span className="relative z-10">[{tag}]</span>
+                  </motion.button>
+                </Magnetic>
+              );
+            })}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {PROJECTS.map(project => (
-              <ProjectCard key={project.id} project={project} onClick={setSelectedProject} />
-            ))}
+          <div className="relative">
+            <motion.div 
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              onClickCapture={handleClickCapture}
+              className="flex gap-8 overflow-x-auto select-none pb-8 cursor-grab active:cursor-grabbing work-scrollbar"
+            >
+              {filteredProjects.map(project => (
+                <motion.div 
+                  key={project.id} 
+                  variants={cardVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.1 }}
+                  className="w-[430px] max-w-[85vw] flex-shrink-0"
+                >
+                  <ProjectCard project={project} onClick={setSelectedProject} />
+                </motion.div>
+              ))}
+              {/* Spacer at end to guarantee last item has margins and doesn't get cut off */}
+              <div className="w-12 md:w-48 lg:w-[400px] flex-shrink-0 select-none pointer-events-none" />
+            </motion.div>
           </div>
         </section>
 
         {/* Footer */}
         <footer id="contact" className="border-t border-border pt-20 pb-32 flex flex-col items-center">
           <h2 className="text-4xl md:text-6xl font-extrabold uppercase mb-12 text-center tracking-tighter">
-            Let's create the <br /> <span className="text-acid">Future of Visuals.</span>
+            Let's create the <br /> 
+            <motion.span 
+              onClick={handleSecretClick}
+              className="text-acid cursor-pointer select-none relative inline-block transition-colors duration-200"
+              style={{ display: 'inline-block' }}
+              animate={secretClicks > 0 ? {
+                x: [
+                  0, 
+                  (Math.random() - 0.5) * secretClicks * 1.0, 
+                  (Math.random() - 0.5) * secretClicks * 1.0, 
+                  0
+                ],
+                y: [
+                  0, 
+                  (Math.random() - 0.5) * secretClicks * 1.0, 
+                  (Math.random() - 0.5) * secretClicks * 1.0, 
+                  0
+                ],
+                scale: 1 + (secretClicks * 0.006),
+              } : {}}
+              transition={secretClicks > 0 ? {
+                duration: 0.12,
+                ease: "easeInOut"
+              } : {}}
+              whileTap={{ scale: 0.95 }}
+            >
+              Future of Visuals.
+            </motion.span>
           </h2>
           <div className="flex flex-wrap justify-center gap-6">
             <a 
@@ -321,6 +665,30 @@ const App: React.FC = () => {
           onBack={() => setSelectedProject(null)} 
         />
       )}
+
+      {/* Back to Top Floating Button with Magnetic effect */}
+      <AnimatePresence>
+        {showBackToTop && !selectedProject && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 120 }}
+            className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 select-none"
+          >
+            <Magnetic range={50} strength={0.4}>
+              <button
+                onClick={scrollToTop}
+                onMouseEnter={() => audioService.playClick()}
+                className="font-mono text-[9px] md:text-[10px] font-bold tracking-[0.15em] border border-border px-4 py-2.5 bg-surface text-white hover:text-bg hover:bg-acid hover:border-acid active:scale-95 cursor-pointer ease-out transition-all duration-150 uppercase shadow-[4px_4px_0px_rgba(255,255,255,0.1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                title="Back to Top"
+              >
+                [↑_TOP]
+              </button>
+            </Magnetic>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

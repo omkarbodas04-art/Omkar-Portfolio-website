@@ -7,6 +7,7 @@ export interface Project {
   images?: string[]; // Optional array for slideshows
   year: string;
   brief?: string[];
+  tags?: string[];
 }
 
 // Fix: Added missing ChatMessage interface required by AIChat.tsx and geminiService.ts

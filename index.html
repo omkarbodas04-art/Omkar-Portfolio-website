@@ -14,11 +14,11 @@
         theme: {
           extend: {
             colors: {
-              'acid': '#ccff00',
-              'surface': '#121212',
-              'bg': '#050505',
-              'border': '#333333',
-              'text-sec': '#888888'
+              'acid': 'var(--acid-color, #ccff00)',
+              'surface': 'var(--surface-color, #121212)',
+              'bg': 'var(--bg-color, #050505)',
+              'border': 'var(--border-color, #333333)',
+              'text-sec': 'var(--text-sec-color, #888888)'
             },
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
@@ -43,25 +43,95 @@
       }
     </script>
     <style>
+      :root {
+        --acid-color: #ccff00;
+        --bg-color: #050505;
+        --surface-color: #121212;
+        --border-color: #333333;
+        --text-sec-color: #888888;
+        --text-primary-color: #ffffff;
+        --text-primary-rgb: 255, 255, 255;
+        --overlay-bg: rgba(0, 0, 0, 0.85);
+      }
+      
+      :root.theme-inverted {
+        --acid-color: #000000;
+        --bg-color: #ccff00;
+        --surface-color: #ffffff;
+        --border-color: #000000;
+        --text-sec-color: #1a1a1a;
+        --text-primary-color: #000000;
+        --text-primary-rgb: 0, 0, 0;
+        --overlay-bg: rgba(204, 255, 0, 0.9);
+      }
+
       /* Extreme reset to kill the hand cursor entirely */
       * {
         cursor: none !important;
       }
       
       body {
-        background-color: #050505;
-        color: #ffffff;
+        background-color: var(--bg-color);
+        color: var(--text-primary-color);
         overflow-x: hidden;
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+      }
+
+      /* High-fidelity overrides for Inverted theme to style other components seamlessly */
+      :root.theme-inverted .text-white {
+        color: var(--text-primary-color) !important;
+      }
+      :root.theme-inverted .text-white\/40 {
+        color: rgba(var(--text-primary-rgb), 0.4) !important;
+      }
+      :root.theme-inverted .text-white\/60 {
+        color: rgba(var(--text-primary-rgb), 0.6) !important;
+      }
+      :root.theme-inverted .border-white {
+        border-color: var(--text-primary-color) !important;
+      }
+      :root.theme-inverted .bg-\[\#080808\] {
+        background-color: var(--surface-color) !important;
+      }
+      :root.theme-inverted .bg-\[\#121212\] {
+        background-color: var(--surface-color) !important;
+      }
+      :root.theme-inverted .bg-\[\#050505\] {
+        background-color: var(--bg-color) !important;
+      }
+      :root.theme-inverted .bg-[#080808] {
+        background-color: var(--surface-color) !important;
+      }
+      :root.theme-inverted .bg-[#121212] {
+        background-color: var(--surface-color) !important;
+      }
+      :root.theme-inverted .bg-[#050505] {
+        background-color: var(--bg-color) !important;
       }
 
       .brutalist-border {
-        border: 1px solid #333333;
+        border: 1px solid var(--border-color);
       }
       .brutalist-border-hover:hover {
-        border-color: #ccff00;
+        border-color: var(--acid-color);
       }
       .marquee-tilted {
         transform: rotate(-2deg) scale(1.05);
+      }
+      
+      @keyframes kinetic-wave {
+        0%, 100% {
+          transform: translateY(0) skewX(-2deg) scaleY(1);
+          letter-spacing: 0.05em;
+        }
+        50% {
+          transform: translateY(-2px) skewX(4deg) scaleY(1.04);
+          letter-spacing: 0.12em;
+        }
+      }
+      .moving-kinetic-text {
+        display: inline-block;
+        animation: kinetic-wave 3.5s ease-in-out infinite;
       }
       
       /* Blend mode for the cursor - makes it feel premium */
@@ -79,17 +149,51 @@
         }
       }
 
+      /* Hide scrollbar on specifically classed elements */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+
+      /* Visually stylized brutalist scrollbar specifically for the Work slider */
+      .work-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: var(--acid-color) var(--surface-color);
+      }
+      .work-scrollbar::-webkit-scrollbar {
+        height: 8px; /* Slightly thicker for usability */
+        display: block !important;
+      }
+      .work-scrollbar::-webkit-scrollbar-track {
+        background: var(--surface-color);
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+      }
+      .work-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--acid-color);
+        border-left: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-radius: 0px !important;
+        cursor: pointer;
+      }
+      .work-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--text-primary-color);
+      }
+
       ::-webkit-scrollbar {
         width: 4px;
       }
       ::-webkit-scrollbar-track {
-        background: #050505;
+        background: var(--bg-color);
       }
       ::-webkit-scrollbar-thumb {
-        background: #333;
+        background: var(--border-color);
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #ccff00;
+        background: var(--acid-color);
       }
 
       /* Ensure smooth scroll padding for sticky elements if added later */

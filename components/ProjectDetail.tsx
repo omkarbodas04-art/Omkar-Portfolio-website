@@ -38,7 +38,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack }) => {
   return (
     <div 
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300"
-      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
+      style={{ background: 'var(--overlay-bg, rgba(0,0,0,0.85))', backdropFilter: 'blur(12px)' }}
       onClick={onBack}
     >
       <div 

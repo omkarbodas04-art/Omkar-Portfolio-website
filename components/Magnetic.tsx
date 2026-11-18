@@ -31,18 +31,9 @@ const Magnetic: React.FC<MagneticProps> = ({ children, range = 60, strength = 0.
     const distanceX = clientX - centerX;
     const distanceY = clientY - centerY;
     
-    // Dynamic math-based approach for smooth activation gradient
-    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-
-    if (distance < range) {
-      // Attraction scales towards the cursor
-      x.set(distanceX * strength);
-      y.set(distanceY * strength);
-    } else {
-      // Fade/Reset back to position when out of range
-      x.set(0);
-      y.set(0);
-    }
+    // Attraction scales towards the cursor within the active hover boundary
+    x.set(distanceX * strength);
+    y.set(distanceY * strength);
   };
 
   const handleMouseLeave = () => {
