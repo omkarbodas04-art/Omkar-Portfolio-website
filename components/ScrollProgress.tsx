@@ -15,7 +15,7 @@ const ScrollProgress: React.FC = () => {
   return (
     <motion.div
       id="global-scroll-progress-bar"
-      className="fixed top-0 left-0 right-0 h-[3px] bg-acid origin-left z-[9999] pointer-events-none will-change-transform"
+      className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-acid via-acid to-accent2 origin-left z-[9999] pointer-events-none will-change-transform"
       style={{ scaleX }}
     />
   );

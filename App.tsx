@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Project } from './types';
 import ProjectCard from './components/ProjectCard';
@@ -8,6 +8,8 @@ import CustomCursor from './components/CustomCursor';
 import Magnetic from './components/Magnetic';
 import ScrollProgress from './components/ScrollProgress';
 import SkillPill from './components/SkillPill';
+import PixelRevealPortrait from './components/PixelRevealPortrait';
+import GamingArcadeStrip from './components/GamingArcadeStrip';
 import { audioService } from './services/audioService';
 
 const containerVariants = {
@@ -245,14 +247,6 @@ const App: React.FC = () => {
     ? PROJECTS
     : PROJECTS.filter(project => project.tags?.includes(selectedTag));
 
-  // Reset horizontal slider scroll progress & scrollLeft on tag change
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft = 0;
-      setScrollProgress(0);
-    }
-  }, [selectedTag]);
-
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
@@ -278,17 +272,27 @@ const App: React.FC = () => {
     audioService.setMuted(nextMute);
   };
 
-  // Drag-to-scroll logic for Work panel using a robust useRef config to prevent stuttery re-renders on mousemove
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef({
-    isDragging: false,
-    dragged: false,
-    startX: 0,
-    scrollLeft: 0,
-  });
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
+  const [isToolkitHovered, setIsToolkitHovered] = useState(false);
+
+  const getBentoSpanClass = (index: number, total: number) => {
+    if (total === 1) return 'md:col-span-2 lg:col-span-8';
+    if (total === 2) return 'md:col-span-1 lg:col-span-6';
+    if (total === 3) return 'md:col-span-1 lg:col-span-4';
+    if (total === 4) {
+      return index === 0 || index === 3 ? 'md:col-span-1 lg:col-span-7' : 'md:col-span-1 lg:col-span-5';
+    }
+    const pattern = [
+      'md:col-span-1 lg:col-span-6',
+      'md:col-span-1 lg:col-span-3',
+      'md:col-span-1 lg:col-span-3',
+      'md:col-span-1 lg:col-span-3',
+      'md:col-span-1 lg:col-span-3',
+      'md:col-span-1 lg:col-span-6',
+    ];
+    return pattern[index % pattern.length];
+  };
 
   const handleSecretClick = () => {
     const next = secretClicks + 1;
@@ -329,70 +333,6 @@ const App: React.FC = () => {
     audioService.playClick();
   };
 
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    const totalScroll = scrollWidth - clientWidth;
-    if (totalScroll <= 0) {
-      setScrollProgress(0);
-    } else {
-      setScrollProgress((scrollLeft / totalScroll) * 100);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    dragRef.current.isDragging = true;
-    dragRef.current.dragged = false;
-    dragRef.current.startX = e.clientX;
-    dragRef.current.scrollLeft = scrollRef.current.scrollLeft;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragRef.current.isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.clientX;
-    const walk = (x - dragRef.current.startX) * 1.8; // speed multiplier
-    if (Math.abs(walk) > 4) {
-      dragRef.current.dragged = true;
-    }
-    scrollRef.current.scrollLeft = dragRef.current.scrollLeft - walk;
-  };
-
-  const handleMouseUp = () => {
-    dragRef.current.isDragging = false;
-  };
-
-  const handleMouseLeave = () => {
-    dragRef.current.isDragging = false;
-  };
-
-  const handleClickCapture = (e: React.MouseEvent) => {
-    if (dragRef.current.dragged) {
-      e.stopPropagation();
-      e.preventDefault();
-      dragRef.current.dragged = false;
-    }
-  };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY === 0) return;
-      const canScrollLeft = el.scrollLeft > 0;
-      const canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth;
-      if ((e.deltaY < 0 && canScrollLeft) || (e.deltaY > 0 && canScrollRight)) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY * 1.5; // multiplier for a fluid scroll speed
-      }
-    };
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-    };
-  }, [filteredProjects]);
-
   useEffect(() => {
     // Prevent body scroll when project is open
     if (selectedProject) {
@@ -403,69 +343,85 @@ const App: React.FC = () => {
   }, [selectedProject]);
 
   return (
-    <div className="min-h-screen bg-bg text-white selection:bg-acid selection:text-bg animate-in fade-in duration-500">
+    <div className="min-h-screen bg-bg text-white selection:bg-acid selection:text-bg animate-in fade-in duration-500 overflow-x-clip">
       <CustomCursor />
       <ScrollProgress />
       
       {/* Home Content Always Visible */}
       <div className={`transition-all duration-700 ${selectedProject ? 'blur-sm scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
         
-        <div className="max-w-[1400px] mx-auto px-6 py-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 md:py-10">
           {/* Header */}
-          <header className="flex justify-between items-center border-b border-border pb-8 mb-16">
-            <div className="text-2xl font-extrabold uppercase tracking-tighter">
-              OMKAR<span className="text-acid">PORTFOLIO</span>
-            </div>
-            
-            <div className="flex items-center gap-4 md:gap-6">
-              <nav className="hidden md:flex items-center gap-10 font-mono text-[10px] tracking-widest text-text-sec uppercase">
-                <Magnetic>
-                  <a 
-                    href="#work" 
-                    onMouseEnter={() => audioService.playClick()} 
-                    className="hover:text-acid transition-colors"
-                  >
-                    [WORK]
-                  </a>
-                </Magnetic>
-                <Magnetic>
-                  <a 
-                    href="#contact" 
-                    onMouseEnter={() => audioService.playClick()} 
-                    className="hover:text-acid transition-colors"
-                  >
-                    [CONTACT]
-                  </a>
-                </Magnetic>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-acid rounded-full animate-blink"></div>
-                  <span>Open for Commissions</span>
+          <header className="border-b border-border pb-5 md:pb-8 mb-10 md:mb-16">
+            <div className="flex flex-wrap justify-between items-center gap-3">
+              <div className="text-lg sm:text-2xl font-extrabold uppercase tracking-tighter">
+                OMKAR<span className="text-acid">PORTFOLIO</span>
+              </div>
+              
+              <div className="flex items-center gap-4 md:gap-6">
+                <nav className="hidden md:flex items-center gap-10 font-mono text-[10px] tracking-widest text-text-sec uppercase">
+                  <Magnetic>
+                    <a 
+                      href="#work" 
+                      onMouseEnter={() => audioService.playClick()} 
+                      className="hover:text-acid transition-colors"
+                    >
+                      [WORK]
+                    </a>
+                  </Magnetic>
+                  <Magnetic>
+                    <a 
+                      href="#contact" 
+                      onMouseEnter={() => audioService.playClick()} 
+                      className="hover:text-acid transition-colors"
+                    >
+                      [CONTACT]
+                    </a>
+                  </Magnetic>
+                  <div className="border-l border-border pl-8">
+                    <span className="text-accent2/80">UTC</span> {time}
+                  </div>
+                </nav>
+
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Magnetic>
+                    <button 
+                      onClick={toggleMute}
+                      onMouseEnter={() => audioService.playClick()}
+                      id="sound-toggle-btn"
+                      className="font-mono text-[9px] font-bold tracking-[0.1em] sm:tracking-[0.15em] border border-border px-2.5 sm:px-3.5 py-1.5 bg-surface hover:bg-acid hover:text-bg hover:border-acid active:scale-95 transition-all uppercase whitespace-nowrap"
+                    >
+                      [{isMuted ? 'MUTED' : 'SOUND_ON'}]
+                    </button>
+                  </Magnetic>
+
+                  <Magnetic>
+                    <button 
+                      onClick={toggleTheme}
+                      onMouseEnter={() => audioService.playClick()}
+                      id="theme-toggle-btn"
+                      className="font-mono text-[9px] font-bold tracking-[0.1em] sm:tracking-[0.15em] border border-border px-2.5 sm:px-3.5 py-1.5 bg-surface hover:bg-acid hover:text-bg hover:border-acid active:scale-95 transition-all uppercase whitespace-nowrap"
+                    >
+                      [{theme === 'dark' ? 'INVERT' : 'DARK'}]
+                    </button>
+                  </Magnetic>
                 </div>
-                <div className="border-l border-border pl-8">UTC {time}</div>
-              </nav>
+              </div>
+            </div>
 
-              <div className="flex items-center gap-2">
-                <Magnetic>
-                  <button 
-                    onClick={toggleMute}
-                    onMouseEnter={() => audioService.playClick()}
-                    id="sound-toggle-btn"
-                    className="font-mono text-[9px] font-bold tracking-[0.15em] border border-border px-3.5 py-1.5 bg-surface hover:bg-acid hover:text-bg hover:border-acid active:scale-95 transition-all uppercase"
-                  >
-                    [{isMuted ? 'SOUND_MUTED' : 'SOUND_ON'}]
-                  </button>
-                </Magnetic>
-
-                <Magnetic>
-                  <button 
-                    onClick={toggleTheme}
-                    onMouseEnter={() => audioService.playClick()}
-                    id="theme-toggle-btn"
-                    className="font-mono text-[9px] font-bold tracking-[0.15em] border border-border px-3.5 py-1.5 bg-surface hover:bg-acid hover:text-bg hover:border-acid active:scale-95 transition-all uppercase"
-                  >
-                    [{theme === 'dark' ? 'INVERT_THEME' : 'DARK_THEME'}]
-                  </button>
-                </Magnetic>
+            {/* Mobile Sub-Navigation Bar */}
+            <div className="flex md:hidden items-center justify-between gap-3 pt-4 mt-4 border-t border-border/50 font-mono text-[10px] tracking-widest text-text-sec uppercase">
+              <div className="flex items-center gap-4">
+                <a href="#work" className="hover:text-acid active:text-acid transition-colors py-1">
+                  [WORK]
+                </a>
+                <a href="#contact" className="hover:text-acid active:text-acid transition-colors py-1">
+                  [CONTACT]
+                </a>
+              </div>
+              <div className="flex items-center gap-2 text-[9px]">
+                <div className="w-2 h-2 bg-accent2 rounded-full animate-blink shrink-0"></div>
+                <span className="truncate">Open for Commissions</span>
               </div>
             </div>
           </header>
@@ -475,77 +431,127 @@ const App: React.FC = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="mb-24"
+            className="mb-12 md:mb-24"
           >
-            <h1 className="text-6xl md:text-[140px] font-extrabold uppercase leading-[0.85] tracking-tighter mb-10 select-none">
+            <h1 className="text-[clamp(2.85rem,14.5vw,8.75rem)] font-extrabold uppercase leading-[0.88] md:leading-[0.85] tracking-tighter mb-6 md:mb-10 select-none">
               <span className="overflow-hidden block"><motion.span variants={itemVariants} className="block">Shaping</motion.span></span>
               <span className="overflow-hidden block text-acid"><motion.span variants={itemVariants} className="block">Visual</motion.span></span>
               <span className="overflow-hidden block"><motion.span variants={itemVariants} className="block">Stories.</motion.span></span>
             </h1>
-            <motion.div variants={itemVariants} className="max-w-xl border-l-2 border-acid pl-8 py-2">
-              <p className="font-mono text-lg text-text-sec leading-relaxed">
+            <motion.div variants={itemVariants} className="max-w-xl border-l-2 border-acid pl-4 sm:pl-6 md:pl-8 py-1.5 md:py-2">
+              <p className="font-mono text-sm sm:text-base md:text-lg text-text-sec leading-relaxed">
                 I’m a Visual Communication student, curious about how design and storytelling shape digital experiences, and always looking to learn something new.
               </p>
             </motion.div>
           </motion.section>
         </div>
 
-        {/* Marquee */}
-        <div className="bg-acid text-bg py-5 overflow-hidden whitespace-nowrap marquee-tilted border-y-2 border-white mb-32">
-          <div className="inline-block animate-scroll font-mono font-bold text-xl uppercase">
-            <span className="moving-kinetic-text">
-              /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY /// VISUAL COMMUNICATION /// BRANDING /// TYPOGRAPHY /// MOTION DESIGN /// UI/UX /// EDITORIAL /// 3D RENDERING /// CREATIVE DIRECTION /// STRATEGY
-            </span>
-          </div>
-        </div>
+        {/* Interactive Gaming Arcade Strip */}
+        <GamingArcadeStrip />
 
-        <div className="max-w-[1400px] mx-auto px-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           {/* Bio & Skills Section */}
-          <section className="mb-32 grid grid-cols-1 lg:grid-cols-12 gap-12 border-t border-border pt-20">
-          <div className="lg:col-span-7">
-            <h2 className="text-4xl font-extrabold uppercase mb-8 tracking-tighter">
-              Design <span className="text-acid underline decoration-2 underline-offset-8">Strategy</span>
-            </h2>
-            <div className="space-y-6 text-xl font-medium leading-relaxed max-w-2xl">
-              <p>
-                I’m Omkar, a Visual Communication student who believes visual language isn’t just communication it’s the strongest bridge between people in a digital-first world.
-              </p>
-              <p className="text-text-sec">
-                My work spans branding, motion, and digital product design. I see each project as a space to explore typography and composition, creating bold, expressive visuals that still serve a clear message.
-              </p>
+          <section className="mb-20 md:mb-32 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 border-t border-border pt-12 md:pt-20">
+            <div className="lg:col-span-7 flex flex-col gap-8 md:gap-10">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold uppercase mb-6 md:mb-8 tracking-tighter">
+                  Design <span className="text-acid underline decoration-2 underline-offset-8">Strategy</span>
+                </h2>
+                <div className="space-y-4 md:space-y-6 text-base sm:text-lg md:text-xl font-medium leading-relaxed max-w-2xl">
+                  <p>
+                    I’m Omkar, a Visual Communication student who believes visual language isn’t just communication it’s the strongest bridge between people in a digital-first world.
+                  </p>
+                  <p className="text-text-sec">
+                    My work spans branding, motion, and digital product design. I see each project as a space to explore typography and composition, creating bold, expressive visuals that still serve a clear message.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-surface border border-border p-5 sm:p-8 relative">
+                <div
+                  onMouseEnter={() => {
+                    setIsToolkitHovered(true);
+                    audioService.playClick();
+                  }}
+                  onMouseLeave={() => setIsToolkitHovered(false)}
+                  onFocus={() => setIsToolkitHovered(true)}
+                  onBlur={() => setIsToolkitHovered(false)}
+                  tabIndex={0}
+                  aria-label="Toolkit: Technological Proficiency"
+                  className="absolute -top-3 right-3 sm:-right-3 bg-acid text-bg px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest cursor-help focus:outline-none transition-all duration-150 hover:shadow-[3px_3px_0px_var(--accent2-color)] hover:-translate-y-0.5 z-20"
+                >
+                  Toolkit
+                  <AnimatePresence>
+                    {isToolkitHovered && (
+                      <motion.div
+                        role="tooltip"
+                        initial={{ opacity: 0, y: 6, scale: 0.94 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                        transition={{ duration: 0.14, ease: 'easeOut' }}
+                        className="absolute bottom-full right-0 mb-3.5 z-40 pointer-events-none select-none whitespace-nowrap"
+                      >
+                        <motion.div
+                          animate={{ y: [0, -3, 0] }}
+                          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                          className="relative bg-bg border-2 border-acid px-3.5 py-2 shadow-[4px_4px_0px_var(--accent2-color)]"
+                        >
+                          {/* Stepped pixel-art corner accents */}
+                          <span className="absolute top-0 left-0 w-1 h-1 bg-accent2" aria-hidden="true" />
+                          <span className="absolute top-0 right-0 w-1 h-1 bg-accent2" aria-hidden="true" />
+                          <span className="absolute bottom-0 left-0 w-1 h-1 bg-accent2" aria-hidden="true" />
+                          <span className="absolute bottom-0 right-0 w-1 h-1 bg-accent2" aria-hidden="true" />
+
+                          <div className="flex items-center gap-2">
+                            <span className="grid grid-cols-2 gap-[1px] shrink-0" aria-hidden="true">
+                              <span className="w-1.5 h-1.5 bg-acid" />
+                              <span className="w-1.5 h-1.5 bg-accent2" />
+                              <span className="w-1.5 h-1.5 bg-accent2" />
+                              <span className="w-1.5 h-1.5 bg-acid" />
+                            </span>
+                            <span className="font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-primary-color)] leading-none">
+                              Technological Proficiency
+                            </span>
+                          </div>
+
+                          {/* Stepped pixel-art pointer tail */}
+                          <div className="absolute top-full right-4 flex flex-col items-center" aria-hidden="true">
+                            <span className="w-3 h-[3px] bg-acid" />
+                            <span className="w-1.5 h-[3px] bg-acid" />
+                            <span className="w-[3px] h-[3px] bg-accent2" />
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <h3 className="font-mono text-xs uppercase text-acid mb-5 sm:mb-6 tracking-[0.25em] sm:tracking-[0.3em]">skills</h3>
+                <div className="flex flex-wrap gap-2.5 sm:gap-3">
+                  {SKILLS.map((skill) => (
+                    <SkillPill key={skill} skill={skill} />
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="lg:col-span-5 bg-surface border border-border p-8 relative">
-            <div className="absolute -top-3 -right-3 bg-acid text-bg px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest">
-              Toolkit
-            </div>
-            <h3 className="font-mono text-xs uppercase text-acid mb-6 tracking-[0.3em]">/// DESIGN_CORE.PKG</h3>
-            <div className="flex flex-wrap gap-3">
-              {SKILLS.map((skill) => (
-                <SkillPill key={skill} skill={skill} />
-              ))}
-            </div>
-          </div>
-        </section>
+
+            {/* Interactive Radial Pixel Portrait */}
+            <PixelRevealPortrait
+              photoSrc="/assets/aistudio/IMG-20250830-WA0014_2a7fdd5e.jpg"
+              pixelCharSrc="/assets/aistudio/image_5e6f91fb.png"
+              alt="Omkar portrait"
+            />
+          </section>
 
         {/* Work Section */}
-        <section id="work" className="mb-32 overflow-hidden">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-border pb-6 mb-8 gap-4">
+        <section id="work" className="mb-20 md:mb-32">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-border pb-5 md:pb-6 mb-6 md:mb-8 gap-3 md:gap-4">
             <div>
-              <h2 className="text-5xl font-extrabold uppercase tracking-tighter">MY work</h2>
-              <p className="font-mono text-[9px] text-acid uppercase tracking-[0.2em] mt-1 select-none">
-                [ DRAG OR SCROLL HORIZONTALLY TO EXPLORE ]
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-text-sec text-xs uppercase">[DRAGGABLE LIST]</span>
-              <span className="font-mono text-text-sec text-xs">(2023 - 2024)</span>
+              <h2 className="text-4xl sm:text-5xl font-extrabold uppercase tracking-tighter">MY work</h2>
             </div>
           </div>
 
           {/* Brutalist Tag Filter Bar */}
-          <div className="flex flex-wrap gap-2.5 md:gap-4 mb-10 pb-2 overflow-x-auto no-scrollbar select-none">
+          <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-8 md:mb-10 py-1 select-none">
             {['All', 'Branding', 'Motion', 'Editorial', 'Typography', 'Illustration'].map((tag) => {
               const isActive = selectedTag === tag;
               return (
@@ -559,10 +565,10 @@ const App: React.FC = () => {
                     whileTap={{ scale: 0.95 }}
                     animate={isActive ? { scale: 1.03 } : { scale: 1 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                    className={`relative overflow-hidden font-mono text-[11px] md:text-xs font-bold uppercase tracking-widest border-2 px-5 py-2.5 bg-surface select-none cursor-pointer transition-all duration-150 ${
+                    className={`relative overflow-hidden font-mono text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-wider sm:tracking-widest border-2 px-3.5 py-2 sm:px-5 sm:py-2.5 bg-surface select-none cursor-pointer transition-all duration-150 ${
                       isActive 
-                        ? 'border-acid text-black font-black shadow-[4px_4px_0px_rgba(255,255,255,0.15)]' 
-                        : 'border-border text-white/60 hover:text-white hover:border-acid hover:shadow-[4px_4px_0px_var(--acid-color)] hover:-translate-x-[2px] hover:-translate-y-[2px] shadow-[3px_3px_0px_rgba(255,255,255,0.06)]'
+                        ? 'border-acid text-bg font-black shadow-[4px_4px_0px_rgba(var(--text-primary-rgb),0.18)]' 
+                        : 'border-border text-text-sec hover:text-[var(--text-primary-color)] hover:border-acid hover:shadow-[4px_4px_0px_var(--acid-color)] hover:-translate-x-[2px] hover:-translate-y-[2px] shadow-[3px_3px_0px_rgba(var(--text-primary-rgb),0.08)]'
                     }`}
                   >
                     {isActive && (
@@ -581,36 +587,33 @@ const App: React.FC = () => {
           </div>
           
           <div className="relative">
-            <motion.div 
-              ref={scrollRef}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              onClickCapture={handleClickCapture}
-              className="flex gap-8 overflow-x-auto select-none pb-8 cursor-grab active:cursor-grabbing work-scrollbar"
+            <motion.div
+              variants={gridVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.05 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-7 select-none pt-2 pb-6"
             >
-              {filteredProjects.map(project => (
-                <motion.div 
-                  key={project.id} 
+              {filteredProjects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  layout
                   variants={cardVariants}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.1 }}
-                  className="w-[430px] max-w-[85vw] flex-shrink-0"
+                  className={`w-full ${getBentoSpanClass(index, filteredProjects.length)}`}
                 >
                   <ProjectCard project={project} onClick={setSelectedProject} />
                 </motion.div>
               ))}
-              {/* Spacer at end to guarantee last item has margins and doesn't get cut off */}
-              <div className="w-12 md:w-48 lg:w-[400px] flex-shrink-0 select-none pointer-events-none" />
             </motion.div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer id="contact" className="border-t border-border pt-20 pb-32 flex flex-col items-center">
-          <h2 className="text-4xl md:text-6xl font-extrabold uppercase mb-12 text-center tracking-tighter">
+        <footer id="contact" className="border-t border-border pt-14 pb-24 md:pt-20 md:pb-32 flex flex-col items-center">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold uppercase mb-8 md:mb-12 text-center tracking-tighter">
             Let's create the <br /> 
             <motion.span 
               onClick={handleSecretClick}
@@ -640,16 +643,16 @@ const App: React.FC = () => {
               Future of Visuals.
             </motion.span>
           </h2>
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto justify-center gap-4 sm:gap-6">
             <a 
               href="mailto:omkarbodas28@gmail.com" 
-              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-acid hover:text-bg hover:border-acid transition-all duration-300"
+              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-acid hover:text-bg hover:border-acid transition-all duration-300 text-center"
             >
               Email
             </a>
             <a 
               href="tel:8999091716" 
-              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-acid hover:text-bg hover:border-acid transition-all duration-300"
+              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-accent2 hover:text-bg hover:border-accent2 transition-all duration-300 text-center"
             >
               Contact
             </a>
@@ -674,13 +677,13 @@ const App: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 20, stiffness: 120 }}
-            className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 select-none"
+            className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 select-none"
           >
             <Magnetic range={50} strength={0.4}>
               <button
                 onClick={scrollToTop}
                 onMouseEnter={() => audioService.playClick()}
-                className="font-mono text-[9px] md:text-[10px] font-bold tracking-[0.15em] border border-border px-4 py-2.5 bg-surface text-white hover:text-bg hover:bg-acid hover:border-acid active:scale-95 cursor-pointer ease-out transition-all duration-150 uppercase shadow-[4px_4px_0px_rgba(255,255,255,0.1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                className="font-mono text-[9px] md:text-[10px] font-bold tracking-[0.15em] border border-border px-3.5 py-2 md:px-4 md:py-2.5 bg-surface text-[var(--text-primary-color)] hover:text-bg hover:bg-acid hover:border-acid active:scale-95 cursor-pointer ease-out transition-all duration-150 uppercase shadow-[4px_4px_0px_rgba(var(--text-primary-rgb),0.12)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
                 title="Back to Top"
               >
                 [↑_TOP]

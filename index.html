@@ -15,6 +15,7 @@
           extend: {
             colors: {
               'acid': 'var(--acid-color, #ccff00)',
+              'accent2': 'var(--accent2-color, #5ce1e6)',
               'surface': 'var(--surface-color, #121212)',
               'bg': 'var(--bg-color, #050505)',
               'border': 'var(--border-color, #333333)',
@@ -45,24 +46,30 @@
     <style>
       :root {
         --acid-color: #ccff00;
+        --accent2-color: #5ce1e6;
         --bg-color: #050505;
         --surface-color: #121212;
+        --surface-hover-color: #0a0a0a;
         --border-color: #333333;
         --text-sec-color: #888888;
         --text-primary-color: #ffffff;
         --text-primary-rgb: 255, 255, 255;
         --overlay-bg: rgba(0, 0, 0, 0.85);
+        --card-glow-opacity: 0.75;
       }
       
       :root.theme-inverted {
-        --acid-color: #000000;
-        --bg-color: #ccff00;
-        --surface-color: #ffffff;
-        --border-color: #000000;
-        --text-sec-color: #1a1a1a;
-        --text-primary-color: #000000;
-        --text-primary-rgb: 0, 0, 0;
-        --overlay-bg: rgba(204, 255, 0, 0.9);
+        --acid-color: #435500;
+        --accent2-color: #146c78;
+        --bg-color: #e4e4dc;
+        --surface-color: #eeeee7;
+        --surface-hover-color: #dcdcd2;
+        --border-color: #2b2b28;
+        --text-sec-color: #4f4f4a;
+        --text-primary-color: #181816;
+        --text-primary-rgb: 24, 24, 22;
+        --overlay-bg: rgba(24, 24, 22, 0.72);
+        --card-glow-opacity: 0.45;
       }
 
       /* Extreme reset to kill the hand cursor entirely */
@@ -70,10 +77,12 @@
         cursor: none !important;
       }
       
+      html,
       body {
         background-color: var(--bg-color);
         color: var(--text-primary-color);
         overflow-x: hidden;
+        max-width: 100%;
         transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
       }
 
@@ -82,10 +91,16 @@
         color: var(--text-primary-color) !important;
       }
       :root.theme-inverted .text-white\/40 {
-        color: rgba(var(--text-primary-rgb), 0.4) !important;
+        color: rgba(var(--text-primary-rgb), 0.45) !important;
       }
       :root.theme-inverted .text-white\/60 {
-        color: rgba(var(--text-primary-rgb), 0.6) !important;
+        color: rgba(var(--text-primary-rgb), 0.65) !important;
+      }
+      :root.theme-inverted .text-white\/90 {
+        color: rgba(var(--text-primary-rgb), 0.9) !important;
+      }
+      :root.theme-inverted .hover\:text-bg:hover {
+        color: var(--bg-color) !important;
       }
       :root.theme-inverted .border-white {
         border-color: var(--text-primary-color) !important;
@@ -97,15 +112,6 @@
         background-color: var(--surface-color) !important;
       }
       :root.theme-inverted .bg-\[\#050505\] {
-        background-color: var(--bg-color) !important;
-      }
-      :root.theme-inverted .bg-[#080808] {
-        background-color: var(--surface-color) !important;
-      }
-      :root.theme-inverted .bg-[#121212] {
-        background-color: var(--surface-color) !important;
-      }
-      :root.theme-inverted .bg-[#050505] {
         background-color: var(--bg-color) !important;
       }
 
@@ -139,13 +145,17 @@
         mix-blend-mode: difference;
       }
 
-      /* Hide custom cursor on mobile */
-      @media (max-width: 768px) {
+      /* Restore native cursor and calm down tilt/kinetic spread on mobile & touch devices */
+      @media (max-width: 768px), (hover: none), (pointer: coarse) {
         * {
           cursor: auto !important;
         }
         .marquee-tilted {
           transform: rotate(0) scale(1);
+        }
+        .moving-kinetic-text {
+          animation: none;
+          letter-spacing: 0.05em;
         }
       }
 

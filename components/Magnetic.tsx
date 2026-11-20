@@ -20,6 +20,7 @@ const Magnetic: React.FC<MagneticProps> = ({ children, range = 60, strength = 0.
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!ref.current) return;
+    if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
     const { clientX, clientY } = e;
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     

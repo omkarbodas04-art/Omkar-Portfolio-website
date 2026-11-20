@@ -9,6 +9,7 @@ interface Particle {
   vy: number;
   char: string;
   scale: number;
+  isAccent2: boolean;
 }
 
 interface SkillPillProps {
@@ -46,6 +47,7 @@ const SkillPill: React.FC<SkillPillProps> = ({ skill }) => {
         vy: (Math.random() - 0.5) * 3 - 1, // slight upward boost
         char: GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)],
         scale: 0.7 + Math.random() * 0.6,
+        isAccent2: Math.random() > 0.68,
       };
 
       setParticles((prev) => [...prev.slice(-15), newParticle]); // keep max 15 particles
@@ -65,6 +67,7 @@ const SkillPill: React.FC<SkillPillProps> = ({ skill }) => {
       vy: (Math.random() - 0.5) * 4,
       char: GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)],
       scale: 0.8 + Math.random() * 0.5,
+      isAccent2: Math.random() > 0.65,
     }));
 
     setParticles((prev) => [...prev, ...burst].slice(-20));
@@ -105,7 +108,9 @@ const SkillPill: React.FC<SkillPillProps> = ({ skill }) => {
               duration: 0.45,
               ease: 'easeOut',
             }}
-            className="absolute pointer-events-none font-mono text-[9px] font-bold z-50 select-none text-acid mix-blend-difference"
+            className={`absolute pointer-events-none font-mono text-[9px] font-bold z-50 select-none mix-blend-difference ${
+              p.isAccent2 ? 'text-accent2' : 'text-acid'
+            }`}
             style={{
               transform: 'translate(-50%, -50%)',
               left: 0,
