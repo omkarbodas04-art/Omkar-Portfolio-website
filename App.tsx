@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Project } from './types';
 import ProjectCard from './components/ProjectCard';
@@ -275,26 +275,6 @@ const App: React.FC = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
   const [isToolkitHovered, setIsToolkitHovered] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const infoPopoverRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isInfoOpen) return;
-    const handleOutside = (e: MouseEvent) => {
-      if (infoPopoverRef.current && !infoPopoverRef.current.contains(e.target as Node)) {
-        setIsInfoOpen(false);
-      }
-    };
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsInfoOpen(false);
-    };
-    document.addEventListener('mousedown', handleOutside);
-    window.addEventListener('keydown', handleEsc);
-    return () => {
-      document.removeEventListener('mousedown', handleOutside);
-      window.removeEventListener('keydown', handleEsc);
-    };
-  }, [isInfoOpen]);
 
   const getBentoSpanClass = (index: number, total: number) => {
     if (total === 1) return 'md:col-span-2 lg:col-span-8';
@@ -425,87 +405,6 @@ const App: React.FC = () => {
                       [{theme === 'dark' ? 'INVERT' : 'DARK'}]
                     </button>
                   </Magnetic>
-
-                  <div ref={infoPopoverRef} className="relative">
-                    <Magnetic>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsInfoOpen(prev => !prev);
-                          audioService.playClick();
-                        }}
-                        onMouseEnter={() => audioService.playClick()}
-                        id="info-toggle-btn"
-                        aria-label="Site information"
-                        aria-expanded={isInfoOpen}
-                        title="Site Info"
-                        className={`relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center border font-mono text-xs font-bold transition-all active:scale-95 ${
-                          isInfoOpen
-                            ? 'bg-acid text-bg border-acid shadow-[3px_3px_0px_var(--accent2-color)]'
-                            : 'bg-surface border-border text-[var(--text-primary-color)] hover:bg-acid hover:text-bg hover:border-acid'
-                        }`}
-                      >
-                        <span className="leading-none lowercase">i</span>
-                        <span
-                          className={`absolute top-0.5 right-0.5 w-1 h-1 ${
-                            isInfoOpen ? 'bg-bg' : 'bg-accent2'
-                          }`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </Magnetic>
-
-                    <AnimatePresence>
-                      {isInfoOpen && (
-                        <motion.div
-                          role="dialog"
-                          aria-label="Portfolio information"
-                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                          transition={{ duration: 0.16, ease: 'easeOut' }}
-                          className="absolute right-0 top-full mt-3 w-72 sm:w-80 bg-surface border-2 border-acid p-4 sm:p-5 z-50 shadow-[5px_5px_0px_var(--accent2-color)] text-left"
-                        >
-                          <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="w-2 h-2 bg-accent2 inline-block" aria-hidden="true" />
-                              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-acid">
-                                Site_Info // Guide
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setIsInfoOpen(false)}
-                              aria-label="Close site info"
-                              className="font-mono text-xs text-text-sec hover:text-acid px-1 leading-none"
-                            >
-                              ×
-                            </button>
-                          </div>
-
-                          <p className="font-mono text-[11px] text-[var(--text-primary-color)] leading-relaxed mb-3">
-                            Portfolio of <span className="text-acid font-bold">Omkar Bodas</span> (aka{' '}
-                            <span className="text-accent2 font-bold">CursedCookies</span>) — Visual Communication &amp; Digital Design.
-                          </p>
-
-                          <div className="space-y-2 border-t border-border/60 pt-3 font-mono text-[10px] text-text-sec">
-                            <div className="flex items-start gap-2">
-                              <span className="text-acid font-bold shrink-0">[01]</span>
-                              <span>Click or press <span className="text-[var(--text-primary-color)] font-bold">SPACE</span> on the arcade strip to jump &amp; play.</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <span className="text-accent2 font-bold shrink-0">[02]</span>
-                              <span>Hover over the portrait to trigger the radial pixel reveal.</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <span className="text-acid font-bold shrink-0">[03]</span>
-                              <span>Toggle <span className="text-[var(--text-primary-color)] font-bold">INVERT</span> or <span className="text-[var(--text-primary-color)] font-bold">SOUND</span> anytime in the top bar.</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
                 </div>
               </div>
             </div>
@@ -756,6 +655,14 @@ const App: React.FC = () => {
               className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-accent2 hover:text-bg hover:border-accent2 transition-all duration-300 text-center"
             >
               Contact
+            </a>
+            <a 
+              href="https://www.behance.net/omkaraku2403u" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 border border-border font-mono text-sm uppercase tracking-widest hover:bg-acid hover:text-bg hover:border-acid transition-all duration-300 text-center"
+            >
+              Behance
             </a>
           </div>
         </footer>
